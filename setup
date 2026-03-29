@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# BOS setup — create ~/.bos, install Python lib, symlink skills
+set -e
+
+INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILLS_DIR="$(dirname "$INSTALL_DIR")"
+
+echo "BOS setup — BatteryOS Skills for Claude Code"
+echo "============================================="
+echo ""
+
+# ─── 1. Create ~/.bos directories ──────────────────────────────
+echo "Creating ~/.bos directories..."
+mkdir -p ~/.bos/bin ~/.bos/state ~/.bos/analytics
+echo "  ~/.bos/bin/"
+echo "  ~/.bos/state/"
+echo "  ~/.bos/analytics/"
+
+# ─── 2. Copy CLI tools ─────────────────────────────────────────
+if [ -d "$INSTALL_DIR/bin" ]; then
+  echo ""
+  echo "Installing CLI tools..."
+  cp "$INSTALL_DIR"/bin/* ~/.bos/bin/ 2>/dev/null || true
+  chmod +x ~/.bos/bin/* 2>/dev/null || true
+  echo "  ~/.bos/bin/bos-config"
+  echo "  ~/.bos/bin/bos-data-check"
+fi
+
+# ─── 3. Create Python venv + install library ───────────────────
+echo ""
+echo "Setting up Python environment..."
+if [ ! -d "$INSTALL_DIR/.venv" ]; then
+  python3 -m venv "$INSTALL_DIR/.venv"
+  echo "  Created .venv"
+fi
+
+source "$INSTALL_DIR/.venv/bin/activate"
+pip install -q requests pytest 2>/dev/null
+echo "  Installed: requests, pytest"
+
+# ─── 4. Run tests to verify ────────────────────────────────────
+echo ""
+echo "Running tests..."
+cd "$INSTALL_DIR/src/bos"
+PYTHONPATH="$INSTALL_DIR/src/bos:$INSTALL_DIR/src" python3 -m pytest -q 2>&1 | tail -1
+
+# ─── 5. Symlink skills ─────────────────────────────────────────
+echo ""
+echo "Creating skill symlinks..."
+for skill in bos-assets bos-prices bos-calcs bos-dispatch bos-queue bos-dashboard; do
+  target="$INSTALL_DIR/skills/$skill"
+  link="$SKILLS_DIR/$skill"
+  if [ -L "$link" ] || [ -e "$link" ]; then
+    rm -f "$link"
+  fi
+  ln -sf "$target" "$link"
+  echo "  $link -> $target"
+done
+
+# ─── 6. Auth check ─────────────────────────────────────────────
+echo ""
+if [ -n "$BOS_API" ]; then
+  echo "Auth: BOS_API environment variable found."
+elif [ -f ~/.bos/credentials ]; then
+  echo "Auth: ~/.bos/credentials found."
+else
+  echo "Auth: No token found."
+  echo "  Set BOS_API env var or create ~/.bos/credentials:"
+  echo '  echo "your-token-here" > ~/.bos/credentials'
+fi
+
+echo ""
+echo "Done. Available skills:"
+echo "  /bos            — Primer and skill router"
+echo "  /bos-assets     — BESS asset performance (30 endpoints)"
+echo "  /bos-prices     — Electricity prices and forwards (7 endpoints)"
+echo "  /bos-calcs      — Dispatch calc results (35 endpoints)"
+echo "  /bos-dispatch   — Create calcs, dispatch to Dragon (4 endpoints)"
+echo "  /bos-queue      — ERCOT interconnection queue (10 endpoints)"
+echo "  /bos-dashboard  — Market dashboards (7 endpoints)"

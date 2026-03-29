@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# bos-config — get/set BOS configuration
+# Usage: bos-config get <key>
+#        bos-config set <key> <value>
+
+set -euo pipefail
+
+CONFIG="$HOME/.bos/config.yaml"
+
+if [ ! -f "$CONFIG" ]; then
+    mkdir -p "$(dirname "$CONFIG")"
+    cat > "$CONFIG" << 'EOF'
+athena: ~/dev/batteryos/athena
+check_ttl_minutes: 60
+auto_refresh: false
+EOF
+fi
+
+cmd="${1:-}"
+key="${2:-}"
+val="${3:-}"
+
+case "$cmd" in
+    get)
+        [ -z "$key" ] && { echo "Usage: bos-config get <key>"; exit 1; }
+        grep "^${key}:" "$CONFIG" | sed "s/^${key}: *//" || echo ""
+        ;;
+    set)
+        [ -z "$key" ] || [ -z "$val" ] && { echo "Usage: bos-config set <key> <value>"; exit 1; }
+        if grep -q "^${key}:" "$CONFIG"; then
+            sed -i '' "s|^${key}:.*|${key}: ${val}|" "$CONFIG"
+        else
+            echo "${key}: ${val}" >> "$CONFIG"
+        fi
+        echo "${key}: ${val}"
+        ;;
+    list)
+        cat "$CONFIG"
+        ;;
+    *)
+        echo "Usage: bos-config {get|set|list} [key] [value]"
+        echo ""
+        echo "Commands:"
+        echo "  get <key>         Read a config value"
+        echo "  set <key> <value> Write a config value"
+        echo "  list              Show all config"
+        echo ""
+        echo "Config file: $CONFIG"
+        ;;
+esac

@@ -1,0 +1,4465 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "BatteryOS API",
+    "description": "Battery energy storage analytics platform covering the ERCOT market. Provides dispatch optimization (Dragon engine), asset performance tracking, forward price curves, interconnection queue data, and market reports.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "BatteryOS",
+      "url": "https://batteryos.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://batteryos.com/api/v1",
+      "description": "BatteryOS API"
+    }
+  ],
+  "security": [
+    {
+      "tokenAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Prices",
+      "description": "Historical and forwards electricity price data (Beast)"
+    },
+    {
+      "name": "Contracts",
+      "description": "Kronos exchange contract data (Beast)"
+    },
+    {
+      "name": "Analysis",
+      "description": "TBn, RPO, EOn, basis, aggregate analytics (Beast)"
+    },
+    {
+      "name": "MarketData",
+      "description": "Wind, solar, load actuals and forecasts (Beast)"
+    },
+    {
+      "name": "Chukar",
+      "description": "CRR basis calculations (Beast)"
+    },
+    {
+      "name": "Dragonet",
+      "description": "Dragonet calculation engine (Beast)"
+    },
+    {
+      "name": "Revenue",
+      "description": "Revenue calculation requests (Beast)"
+    },
+    {
+      "name": "Disclosure",
+      "description": "60-day disclosure data and corrections (Beast)"
+    },
+    {
+      "name": "Trading",
+      "description": "Bid converter tools (Beast)"
+    },
+    {
+      "name": "Assets",
+      "description": "BESS asset data: revenue, volume, performance, rankings (Zeus)"
+    },
+    {
+      "name": "Calc",
+      "description": "Dragon dispatch calc CRUD, node-scenarios, results (Zeus)"
+    },
+    {
+      "name": "Queue",
+      "description": "ERCOT interconnection queue projects, buses, POIs (Zeus)"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Pre-computed market dashboards and reports (Zeus)"
+    }
+  ],
+  "paths": {
+    "/prices/history/ercot/{hub}/": {
+      "post": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Historical DAM+RTM hourly prices",
+        "operationId": "prices_history_ercot_hub",
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ERCOT hub name (e.g. HB_NORTH, HB_SOUTH, HB_WEST, HB_HOUSTON)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "description": "Response format",
+                    "enum": [
+                      "json",
+                      "csv"
+                    ]
+                  },
+                  "curves": {
+                    "type": "string",
+                    "description": "Comma-separated curve names (e.g. DAM, RTM)"
+                  },
+                  "years": {
+                    "type": "string",
+                    "description": "Comma-separated years"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Historical price data"
+          }
+        }
+      }
+    },
+    "/prices/history/{iso}/{node}/stats/": {
+      "get": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Node statistics",
+        "operationId": "prices_history_node_stats",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node statistics"
+          }
+        }
+      }
+    },
+    "/prices/history/{iso}/{node}/": {
+      "post": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Historical actuals data",
+        "operationId": "prices_history_node",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "curves": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Curve names"
+                  },
+                  "years": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Years to query"
+                  },
+                  "resample_frequency": {
+                    "type": "string",
+                    "description": "Resample frequency (e.g. 1H, 1D)"
+                  },
+                  "data_frequency": {
+                    "type": "string",
+                    "description": "Data frequency (e.g. 5T, 15T, 1H)"
+                  },
+                  "merge": {
+                    "type": "boolean",
+                    "description": "Merge curves into a single DataFrame"
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "csv"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Historical actuals data"
+          }
+        }
+      }
+    },
+    "/prices/futures/{iso}/{node}/{refdate}/": {
+      "post": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Forwards data",
+        "operationId": "prices_futures_node",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "refdate",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Reference date (YYYY-MM-DD)"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merge": {
+                    "type": "boolean"
+                  },
+                  "force": {
+                    "type": "boolean"
+                  },
+                  "details": {
+                    "type": "boolean"
+                  },
+                  "include_meta": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Forwards data"
+          }
+        }
+      }
+    },
+    "/prices/futures/{slug}/status/": {
+      "get": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Forwards request status",
+        "operationId": "prices_futures_status",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status of forwards request"
+          }
+        }
+      }
+    },
+    "/prices/futures/{exchange}/{iso}/{node}/{curve}/{agg}/": {
+      "get": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Aggregated forwards prices",
+        "operationId": "prices_futures_aggregated",
+        "parameters": [
+          {
+            "name": "exchange",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "curve",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Aggregation level"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated forwards prices"
+          }
+        }
+      }
+    },
+    "/prices/futures/{exchange}/{iso}/{node}/available_dates/": {
+      "get": {
+        "tags": [
+          "Prices"
+        ],
+        "summary": "Available forwards dates",
+        "operationId": "prices_futures_available_dates",
+        "parameters": [
+          {
+            "name": "exchange",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available dates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvailableDate"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kronos/contracts/": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "List exchanges",
+        "operationId": "kronos_list_exchanges",
+        "responses": {
+          "200": {
+            "description": "List of exchanges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Exchange"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kronos/contracts/{exchange_code}/": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "List contracts for exchange",
+        "operationId": "kronos_list_contracts",
+        "parameters": [
+          {
+            "name": "exchange_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iso",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "shape",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fo_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "phys_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dart_mode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "settlement",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of contracts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Contract"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kronos/contracts/{exchange_code}/{symbol}/": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "Contract prices or available dates",
+        "operationId": "kronos_contract_prices",
+        "parameters": [
+          {
+            "name": "exchange_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "refdate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "fordate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "startref",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endref",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "strip",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "freq",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contract price data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractPrice"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kronos/contracts/{exchange_code}/{symbol}/available_dates/": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "List available refdates",
+        "operationId": "kronos_contract_available_dates",
+        "parameters": [
+          {
+            "name": "exchange_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available reference dates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvailableDate"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kronos/compare/{contract_exchange}/{symbol}/{price_exchange}/{refdate}/": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "Cross-exchange price comparison",
+        "operationId": "kronos_compare",
+        "parameters": [
+          {
+            "name": "contract_exchange",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "price_exchange",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "refdate",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cross-exchange comparison data"
+          }
+        }
+      }
+    },
+    "/analysis/history/{iso}/{node}/tbn/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Actual TBn",
+        "operationId": "analysis_history_tbn",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resample_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actual TBn data"
+          }
+        }
+      }
+    },
+    "/analysis/history/{iso}/{node}/rpo/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Actual RPO",
+        "operationId": "analysis_history_rpo",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resample_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actual RPO data"
+          }
+        }
+      }
+    },
+    "/analysis/history/{iso}/{node}/basis/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Basis calculation",
+        "operationId": "analysis_history_basis",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resample_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Basis calculation data"
+          }
+        }
+      }
+    },
+    "/analysis/history/{iso}/{node}/eon/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Actual EOn",
+        "operationId": "analysis_history_eon",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resample_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actual EOn data"
+          }
+        }
+      }
+    },
+    "/analysis/history/{iso}/{node}/aggregate/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Aggregate actuals",
+        "operationId": "analysis_history_aggregate",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resample_frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate actuals data"
+          }
+        }
+      }
+    },
+    "/analysis/futures/{iso}/{node}/tbn/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Forwards TBn",
+        "operationId": "analysis_futures_tbn",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forwards TBn data"
+          }
+        }
+      }
+    },
+    "/analysis/futures/{iso}/{node}/rpo/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Forwards RPO",
+        "operationId": "analysis_futures_rpo",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forwards RPO data"
+          }
+        }
+      }
+    },
+    "/analysis/futures/{iso}/{node}/eon/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Forwards EOn",
+        "operationId": "analysis_futures_eon",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forwards EOn data"
+          }
+        }
+      }
+    },
+    "/analysis/futures/{iso}/{node}/aggregate/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Aggregate forwards",
+        "operationId": "analysis_futures_aggregate",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate forwards data"
+          }
+        }
+      }
+    },
+    "/analysis/calendar/{iso}/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Market calendar",
+        "operationId": "analysis_calendar",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market calendar data"
+          }
+        }
+      }
+    },
+    "/analysis/cycn/{annual_cycles}/": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Cycle revenue optimizer",
+        "operationId": "analysis_cycn",
+        "parameters": [
+          {
+            "name": "annual_cycles",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of annual cycles"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cycle revenue optimization data"
+          }
+        }
+      }
+    },
+    "/market_data/actual/wind/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Actual wind",
+        "operationId": "market_data_actual_wind",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "merge",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actual wind generation data"
+          }
+        }
+      }
+    },
+    "/market_data/actual/solar/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Actual solar",
+        "operationId": "market_data_actual_solar",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "merge",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actual solar generation data"
+          }
+        }
+      }
+    },
+    "/market_data/actual/load/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Actual load",
+        "operationId": "market_data_actual_load",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "merge",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actual load data"
+          }
+        }
+      }
+    },
+    "/market_data/actual/system_data/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "System data",
+        "operationId": "market_data_actual_system_data",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "feature",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "frequency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "merge",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "System data"
+          }
+        }
+      }
+    },
+    "/market_data/forecast/wind/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Wind forecast",
+        "operationId": "market_data_forecast_wind",
+        "responses": {
+          "200": {
+            "description": "Wind forecast data"
+          }
+        }
+      }
+    },
+    "/market_data/forecast/solar/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Solar forecast",
+        "operationId": "market_data_forecast_solar",
+        "responses": {
+          "200": {
+            "description": "Solar forecast data"
+          }
+        }
+      }
+    },
+    "/market_data/forecast/load/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "Load forecast",
+        "operationId": "market_data_forecast_load",
+        "responses": {
+          "200": {
+            "description": "Load forecast data"
+          }
+        }
+      }
+    },
+    "/market_data/forecast/system_data/": {
+      "get": {
+        "tags": [
+          "MarketData"
+        ],
+        "summary": "System data forecast",
+        "operationId": "market_data_forecast_system_data",
+        "responses": {
+          "200": {
+            "description": "System data forecast"
+          }
+        }
+      }
+    },
+    "/chukar/calc/{iso}/{hub}/{node}/": {
+      "get": {
+        "tags": [
+          "Chukar"
+        ],
+        "summary": "CRR basis",
+        "operationId": "chukar_calc",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "refdate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CRR basis calculation data"
+          }
+        }
+      }
+    },
+    "/dragonet/calc/": {
+      "post": {
+        "tags": [
+          "Dragonet"
+        ],
+        "summary": "Dragonet calculation",
+        "operationId": "dragonet_calc",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iso",
+                  "node",
+                  "params"
+                ],
+                "properties": {
+                  "iso": {
+                    "type": "string"
+                  },
+                  "node": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "string",
+                    "description": "JSON-encoded calculation parameters"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV data file"
+                  },
+                  "data_format": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dragonet calculation result"
+          }
+        }
+      }
+    },
+    "/revenue/request/{exchange}/{iso}/{node}/{refdate}/": {
+      "post": {
+        "tags": [
+          "Revenue"
+        ],
+        "summary": "Request revenue calculation",
+        "operationId": "revenue_request",
+        "parameters": [
+          {
+            "name": "exchange",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "refdate",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "scenarios",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "merge",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "data_format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "capacity",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "duration",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revenue calculation request accepted"
+          }
+        }
+      }
+    },
+    "/revenue/request/{slug}/": {
+      "get": {
+        "tags": [
+          "Revenue"
+        ],
+        "summary": "Revenue request status",
+        "operationId": "revenue_request_status",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revenue request status"
+          }
+        }
+      }
+    },
+    "/disclosure_data/60d/{report_id}/": {
+      "post": {
+        "tags": [
+          "Disclosure"
+        ],
+        "summary": "60-day disclosure data",
+        "operationId": "disclosure_60d",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resource_name": {
+                    "type": "string"
+                  },
+                  "filename": {
+                    "type": "string"
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "data_format": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "60-day disclosure data"
+          }
+        }
+      }
+    },
+    "/disclosure_data/correction/{report_id}/": {
+      "get": {
+        "tags": [
+          "Disclosure"
+        ],
+        "summary": "Correction records",
+        "operationId": "disclosure_correction",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correction records"
+          }
+        }
+      }
+    },
+    "/trading/converter/{model_name}/": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Bid converter XLS to XML",
+        "operationId": "trading_converter",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "XLS bid file"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Converted XML bid data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "List assets",
+        "operationId": "asset_list_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assets",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated asset slugs"
+          },
+          {
+            "name": "owner_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "qse_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hub",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "duration",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "county",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startdate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "enddate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "meta",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of assets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Asset"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "List assets (POST)",
+        "operationId": "asset_list_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "assets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "owner_name": {
+                    "type": "string"
+                  },
+                  "qse_name": {
+                    "type": "string"
+                  },
+                  "node": {
+                    "type": "string"
+                  },
+                  "hub": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "number"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "county": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "startdate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "enddate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "format": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of assets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Asset"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/asset/{iso}/{asset_slug}/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Asset detail",
+        "operationId": "asset_detail",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Asset"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/asset/{iso}/{asset_slug}/timeline/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Asset timeline",
+        "operationId": "asset_timeline",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset timeline data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/{asset_slug}/volume/dl/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Asset volume data layer (GET)",
+        "operationId": "asset_volume_dl_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset volume data layer"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Asset volume data layer (POST)",
+        "operationId": "asset_volume_dl_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset volume data layer"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/{asset_slug}/hsl/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Asset HSL data (GET)",
+        "operationId": "asset_hsl_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset HSL data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Asset HSL data (POST)",
+        "operationId": "asset_hsl_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset HSL data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/revenue/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO revenue (actual, GET)",
+        "operationId": "asset_iso_revenue_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO revenue data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO revenue (actual, POST)",
+        "operationId": "asset_iso_revenue_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO revenue data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/revenue/perfect/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO CO perfect revenue (GET)",
+        "operationId": "asset_iso_revenue_perfect_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO CO perfect revenue data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO CO perfect revenue (POST)",
+        "operationId": "asset_iso_revenue_perfect_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO CO perfect revenue data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/revenue/perfect/eo/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO EO perfect revenue (GET)",
+        "operationId": "asset_iso_revenue_perfect_eo_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO EO perfect revenue data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO EO perfect revenue (POST)",
+        "operationId": "asset_iso_revenue_perfect_eo_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO EO perfect revenue data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/volume/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO volume actual (GET)",
+        "operationId": "asset_iso_volume_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO volume data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO volume actual (POST)",
+        "operationId": "asset_iso_volume_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO volume data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/volume/perfect/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO CO perfect volume (GET)",
+        "operationId": "asset_iso_volume_perfect_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO CO perfect volume data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO CO perfect volume (POST)",
+        "operationId": "asset_iso_volume_perfect_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO CO perfect volume data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/volume/perfect/eo/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO EO perfect volume (GET)",
+        "operationId": "asset_iso_volume_perfect_eo_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO EO perfect volume data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO EO perfect volume (POST)",
+        "operationId": "asset_iso_volume_perfect_eo_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO EO perfect volume data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/volume/dispatch/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO dispatch volume (GET)",
+        "operationId": "asset_iso_volume_dispatch_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO dispatch volume data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO dispatch volume (POST)",
+        "operationId": "asset_iso_volume_dispatch_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO dispatch volume data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/bosindex/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO BOS Index actual (GET)",
+        "operationId": "asset_iso_bosindex_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO BOS Index data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO BOS Index actual (POST)",
+        "operationId": "asset_iso_bosindex_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO BOS Index data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/bosindex/perfect/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO BOS Index CO perfect (GET)",
+        "operationId": "asset_iso_bosindex_perfect_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO BOS Index CO perfect data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO BOS Index CO perfect (POST)",
+        "operationId": "asset_iso_bosindex_perfect_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO BOS Index CO perfect data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/availability/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO availability (GET)",
+        "operationId": "asset_iso_availability_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO availability data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO availability (POST)",
+        "operationId": "asset_iso_availability_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO availability data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/performance/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO performance (GET)",
+        "operationId": "asset_iso_performance_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO performance data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO performance (POST)",
+        "operationId": "asset_iso_performance_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO performance data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/percentiles/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO percentile rankings (GET)",
+        "operationId": "asset_iso_percentiles_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO percentile ranking data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO percentile rankings (POST)",
+        "operationId": "asset_iso_percentiles_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO percentile ranking data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/ranking/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO asset rankings (GET)",
+        "operationId": "asset_iso_ranking_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO asset ranking data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO asset rankings (POST)",
+        "operationId": "asset_iso_ranking_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO asset ranking data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/hsl/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO-wide HSL (GET)",
+        "operationId": "asset_iso_hsl_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO-wide HSL data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO-wide HSL (POST)",
+        "operationId": "asset_iso_hsl_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO-wide HSL data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/cycles/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO cycle counts (GET)",
+        "operationId": "asset_iso_cycles_get",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO cycle count data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "ISO cycle counts (POST)",
+        "operationId": "asset_iso_cycles_post",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ISO cycle count data"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/owners/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "List owners",
+        "operationId": "asset_iso_owners",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of asset owners"
+          }
+        }
+      }
+    },
+    "/asset/{iso}/qse/": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "List QSEs",
+        "operationId": "asset_iso_qse",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of QSEs"
+          }
+        }
+      }
+    },
+    "/calc/data/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "List odin data",
+        "operationId": "calc_data_list",
+        "responses": {
+          "200": {
+            "description": "List of odin data entries"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Upload odin data",
+        "operationId": "calc_data_upload",
+        "responses": {
+          "201": {
+            "description": "Odin data uploaded"
+          }
+        }
+      }
+    },
+    "/calc/data/{slug}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Odin data detail",
+        "operationId": "calc_data_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Odin data detail"
+          }
+        }
+      }
+    },
+    "/calc/data/{slug}/calc/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "List calcs using data",
+        "operationId": "calc_data_calcs_list",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of calcs using this data"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Create calc from data",
+        "operationId": "calc_data_calcs_create",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Calc created"
+          }
+        }
+      }
+    },
+    "/calc/calc/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "List calcs",
+        "operationId": "calc_calc_list",
+        "responses": {
+          "200": {
+            "description": "List of calcs"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Create calc",
+        "operationId": "calc_calc_create",
+        "responses": {
+          "201": {
+            "description": "Calc created"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Calc detail",
+        "operationId": "calc_calc_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calc detail"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/status/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Calc status",
+        "operationId": "calc_calc_status",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calc status"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodes/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Calc nodes",
+        "operationId": "calc_calc_nodes",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calc node list"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodes/{node_slug}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Calc node detail",
+        "operationId": "calc_calc_node_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node detail"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/scenarios/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Calc scenarios",
+        "operationId": "calc_calc_scenarios",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calc scenario list"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/scenarios/{scenario_slug}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Scenario detail",
+        "operationId": "calc_calc_scenario_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scenario_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scenario detail"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario combos",
+        "operationId": "calc_calc_nodescenarios",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario combination list"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario detail",
+        "operationId": "calc_calc_nodescenario_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario detail"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/detail/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario extended detail",
+        "operationId": "calc_calc_nodescenario_extended_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Extended node-scenario detail"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/result/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario results",
+        "operationId": "calc_calc_nodescenario_result",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario results"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/daily_result/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario daily results",
+        "operationId": "calc_calc_nodescenario_daily_result",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario daily results"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/xls_result/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario XLS results",
+        "operationId": "calc_calc_nodescenario_xls_result",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario XLS results",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/params/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario params",
+        "operationId": "calc_calc_nodescenario_params",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario parameters"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/nodescenarios/{ns_slug}/status/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario status",
+        "operationId": "calc_calc_nodescenario_status",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ns_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node-scenario status"
+          }
+        }
+      }
+    },
+    "/calc/calc/{slug}/summary/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Calc result summary",
+        "operationId": "calc_calc_summary",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calc result summary"
+          }
+        }
+      }
+    },
+    "/calc/stack/node_data/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Available node data",
+        "operationId": "calc_stack_node_data",
+        "responses": {
+          "200": {
+            "description": "Available node data"
+          }
+        }
+      }
+    },
+    "/calc/stack/product_feature/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Product features",
+        "operationId": "calc_stack_product_feature",
+        "responses": {
+          "200": {
+            "description": "Product feature list"
+          }
+        }
+      }
+    },
+    "/calc/stack/scenario_params/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Scenario parameters",
+        "operationId": "calc_stack_scenario_params",
+        "responses": {
+          "200": {
+            "description": "Scenario parameter definitions"
+          }
+        }
+      }
+    },
+    "/calc/stack/exchange/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Exchange metadata",
+        "operationId": "calc_stack_exchange",
+        "responses": {
+          "200": {
+            "description": "Exchange metadata"
+          }
+        }
+      }
+    },
+    "/calc/stack/{slug}/dispatch/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Dispatch volume data",
+        "operationId": "calc_stack_dispatch",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dispatch volume data"
+          }
+        }
+      }
+    },
+    "/calc/stack/{slug}/multichart/": {
+      "post": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Multi-series chart data",
+        "operationId": "calc_stack_multichart",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Multi-series chart data"
+          }
+        }
+      }
+    },
+    "/calc/stack/ns/revenue/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node-scenario revenue",
+        "operationId": "calc_stack_ns_revenue",
+        "responses": {
+          "200": {
+            "description": "Node-scenario revenue data"
+          }
+        }
+      }
+    },
+    "/calc/node/{iso}/{node}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Node metadata",
+        "operationId": "calc_node_metadata",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calc/valid_refdates/{iso}/{node}/{exchange}/": {
+      "get": {
+        "tags": [
+          "Calc"
+        ],
+        "summary": "Valid reference dates",
+        "operationId": "calc_valid_refdates",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "node",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "exchange",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of valid reference dates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue/{iso}/projects/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "List projects",
+        "operationId": "queue_projects",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of interconnection projects"
+          }
+        }
+      }
+    },
+    "/queue/{iso}/projects/milestones/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Project milestones",
+        "operationId": "queue_projects_milestones",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project milestone data"
+          }
+        }
+      }
+    },
+    "/queue/{iso}/project/{inr}/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Project timeline",
+        "operationId": "queue_project_timeline",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inr",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "INR (Interconnection Request) identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project timeline data"
+          }
+        }
+      }
+    },
+    "/queue/pois/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "POI locations",
+        "operationId": "queue_pois",
+        "responses": {
+          "200": {
+            "description": "List of POI locations"
+          }
+        }
+      }
+    },
+    "/queue/buses/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Transmission buses",
+        "operationId": "queue_buses",
+        "responses": {
+          "200": {
+            "description": "List of transmission buses"
+          }
+        }
+      }
+    },
+    "/queue/{iso}/bus/{slug}/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Bus details",
+        "operationId": "queue_bus_detail",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bus detail data"
+          }
+        }
+      }
+    },
+    "/queue/poi_buses/": {
+      "get": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "POI-bus mappings",
+        "operationId": "queue_poi_buses",
+        "responses": {
+          "200": {
+            "description": "POI-bus mapping data"
+          }
+        }
+      }
+    },
+    "/queue/add/bus/": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Create bus",
+        "operationId": "queue_add_bus",
+        "responses": {
+          "201": {
+            "description": "Bus created"
+          }
+        }
+      }
+    },
+    "/queue/update/bus/": {
+      "put": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Update bus",
+        "operationId": "queue_update_bus",
+        "responses": {
+          "200": {
+            "description": "Bus updated"
+          }
+        }
+      }
+    },
+    "/queue/add/poibus/": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "summary": "Create POI-bus mapping",
+        "operationId": "queue_add_poibus",
+        "responses": {
+          "201": {
+            "description": "POI-bus mapping created"
+          }
+        }
+      }
+    },
+    "/bridge/ranking/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Owner performance rankings",
+        "operationId": "bridge_ranking",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "owner",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rank_by",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "report_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startdate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "enddate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner performance ranking data"
+          }
+        }
+      }
+    },
+    "/bridge/dispatch/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Owner dispatch data",
+        "operationId": "bridge_dispatch",
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner dispatch data"
+          }
+        }
+      }
+    },
+    "/bridge/revenue/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Owner revenue index",
+        "operationId": "bridge_revenue",
+        "parameters": [
+          {
+            "name": "iso",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "owner",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startdate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "enddate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner revenue index data"
+          }
+        }
+      }
+    },
+    "/bridge/tbn_ercot/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "ERCOT TBn spreads",
+        "operationId": "bridge_tbn_ercot",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of top/bottom hours"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ERCOT TBn spread data"
+          }
+        }
+      }
+    },
+    "/bridge/tbn_us/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "US hub TBn spreads",
+        "operationId": "bridge_tbn_us",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of top/bottom hours"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "US hub TBn spread data"
+          }
+        }
+      }
+    },
+    "/bridge/data/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Session encryption key",
+        "operationId": "bridge_data",
+        "responses": {
+          "200": {
+            "description": "Session encryption key"
+          }
+        }
+      }
+    },
+    "/bridge/queue_capacity/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Queue capacity milestones",
+        "operationId": "bridge_queue_capacity",
+        "responses": {
+          "200": {
+            "description": "Queue capacity milestone data"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "tokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Token-based authentication. Format: `Token <key>`. Source: BOS_API env var or ~/.bos/credentials file."
+      }
+    },
+    "schemas": {
+      "Exchange": {
+        "type": "object",
+        "properties": {
+          "mic": {
+            "type": "string",
+            "description": "Market Identifier Code"
+          },
+          "name": {
+            "type": "string",
+            "description": "Exchange name"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "API URL for this exchange"
+          }
+        },
+        "required": [
+          "mic",
+          "name"
+        ]
+      },
+      "Contract": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Contract symbol"
+          },
+          "name": {
+            "type": "string",
+            "description": "Contract name"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "API URL for this contract"
+          },
+          "iso": {
+            "type": "string",
+            "description": "ISO code (e.g. ERCOT)"
+          },
+          "node": {
+            "type": "string",
+            "description": "Node name"
+          },
+          "shape": {
+            "type": "string",
+            "description": "Contract shape (e.g. 7x24, 5x16, 2x16H, 7x8)"
+          },
+          "fo_type": {
+            "type": "string",
+            "description": "Financial/physical type"
+          },
+          "phys_type": {
+            "type": "string",
+            "description": "Physical settlement type"
+          },
+          "dart_mode": {
+            "type": "string",
+            "description": "DAM/RTM mode"
+          },
+          "settlement": {
+            "type": "string",
+            "description": "Settlement type"
+          }
+        },
+        "required": [
+          "symbol",
+          "name",
+          "iso",
+          "node"
+        ]
+      },
+      "ContractPrice": {
+        "type": "object",
+        "properties": {
+          "exchange": {
+            "type": "string",
+            "description": "Exchange code"
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Contract symbol"
+          },
+          "refdate": {
+            "type": "string",
+            "format": "date",
+            "description": "Reference (trade) date"
+          },
+          "fordate": {
+            "type": "string",
+            "format": "date",
+            "description": "Forward (delivery) date"
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "description": "Settlement price"
+          },
+          "open": {
+            "type": "number",
+            "format": "double",
+            "description": "Open price"
+          },
+          "high": {
+            "type": "number",
+            "format": "double",
+            "description": "High price"
+          },
+          "low": {
+            "type": "number",
+            "format": "double",
+            "description": "Low price"
+          },
+          "close": {
+            "type": "number",
+            "format": "double",
+            "description": "Close price"
+          },
+          "volume": {
+            "type": "number",
+            "format": "double",
+            "description": "Trading volume"
+          },
+          "open_interest": {
+            "type": "number",
+            "format": "double",
+            "description": "Open interest"
+          }
+        },
+        "required": [
+          "exchange",
+          "symbol",
+          "refdate",
+          "fordate",
+          "price"
+        ]
+      },
+      "AvailableDate": {
+        "type": "object",
+        "properties": {
+          "refdate": {
+            "type": "string",
+            "format": "date",
+            "description": "Reference date"
+          },
+          "min_fordate": {
+            "type": "string",
+            "format": "date",
+            "description": "Earliest forward date available"
+          },
+          "max_fordate": {
+            "type": "string",
+            "format": "date",
+            "description": "Latest forward date available"
+          }
+        },
+        "required": [
+          "refdate"
+        ]
+      },
+      "Asset": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Unique asset slug identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Asset name"
+          },
+          "node": {
+            "type": "string",
+            "description": "Pricing node"
+          },
+          "owner": {
+            "type": "string",
+            "description": "Asset owner name"
+          },
+          "qse": {
+            "type": "string",
+            "description": "Qualified Scheduling Entity"
+          },
+          "capacity": {
+            "type": "number",
+            "format": "double",
+            "description": "Capacity in MW"
+          },
+          "duration": {
+            "type": "number",
+            "format": "double",
+            "description": "Duration in hours"
+          },
+          "category": {
+            "type": "string",
+            "description": "Asset category"
+          },
+          "cod": {
+            "type": "string",
+            "format": "date",
+            "description": "Commercial Operation Date"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
+        ]
+      }
+    }
+  }
+}

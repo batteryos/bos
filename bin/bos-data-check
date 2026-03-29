@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# bos-data-check — check if local price data is stale
+# Outputs: DATA_CURRENT last=YYYYMMDD | DATA_STALE last=YYYYMMDD expected=YYYYMMDD gap=N | ATHENA_NOT_FOUND
+
+set -euo pipefail
+
+CONFIG="$HOME/.bos/config.yaml"
+CACHE="$HOME/.bos/state/last-data-check"
+
+# Read athena_root from config (simple grep, no YAML parser needed)
+if [ ! -f "$CONFIG" ]; then
+    echo "ATHENA_NOT_FOUND"
+    exit 0
+fi
+
+ATHENA_ROOT=$(grep '^athena:' "$CONFIG" | sed 's/^athena: *//' | sed "s|~|$HOME|")
+TTL=$(grep '^check_ttl_minutes:' "$CONFIG" | sed 's/^check_ttl_minutes: *//')
+TTL=${TTL:-60}
+
+# Check if athena exists
+FUTURES_DIR="$ATHENA_ROOT/database/ercot/price"
+if [ ! -d "$FUTURES_DIR" ]; then
+    echo "ATHENA_NOT_FOUND"
+    exit 0
+fi
+
+# Check cache TTL
+if [ -f "$CACHE" ]; then
+    CACHE_AGE=$(( ($(date +%s) - $(stat -f %m "$CACHE" 2>/dev/null || stat -c %Y "$CACHE" 2>/dev/null)) / 60 ))
+    if [ "$CACHE_AGE" -lt "$TTL" ]; then
+        cat "$CACHE"
+        exit 0
+    fi
+fi
+
+# Find latest futures file on disk
+LATEST=$(ls "$FUTURES_DIR"/futures_*.parquet 2>/dev/null | sed 's/.*futures_//' | sed 's/\.parquet//' | sort -r | head -1)
+
+if [ -z "$LATEST" ]; then
+    RESULT="DATA_STALE last=none expected=unknown gap=unknown"
+    echo "$RESULT" | tee "$CACHE"
+    exit 0
+fi
+
+# Compute last business day (skip Sat/Sun)
+DOW=$(date +%u)  # 1=Mon ... 7=Sun
+if [ "$DOW" -eq 7 ]; then
+    EXPECTED=$(date -v-2d +%Y%m%d 2>/dev/null || date -d '2 days ago' +%Y%m%d)
+elif [ "$DOW" -eq 6 ]; then
+    EXPECTED=$(date -v-1d +%Y%m%d 2>/dev/null || date -d '1 day ago' +%Y%m%d)
+elif [ "$DOW" -eq 1 ]; then
+    EXPECTED=$(date -v-3d +%Y%m%d 2>/dev/null || date -d '3 days ago' +%Y%m%d)
+else
+    EXPECTED=$(date -v-1d +%Y%m%d 2>/dev/null || date -d '1 day ago' +%Y%m%d)
+fi
+
+if [ "$LATEST" \< "$EXPECTED" ]; then
+    # Compute gap in days
+    LATEST_SEC=$(date -j -f "%Y%m%d" "$LATEST" +%s 2>/dev/null || date -d "${LATEST:0:4}-${LATEST:4:2}-${LATEST:6:2}" +%s)
+    EXPECTED_SEC=$(date -j -f "%Y%m%d" "$EXPECTED" +%s 2>/dev/null || date -d "${EXPECTED:0:4}-${EXPECTED:4:2}-${EXPECTED:6:2}" +%s)
+    GAP=$(( (EXPECTED_SEC - LATEST_SEC) / 86400 ))
+    RESULT="DATA_STALE last=$LATEST expected=$EXPECTED gap=$GAP"
+else
+    RESULT="DATA_CURRENT last=$LATEST"
+fi
+
+mkdir -p "$(dirname "$CACHE")"
+echo "$RESULT" > "$CACHE"
+echo "$RESULT"
