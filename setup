@@ -65,8 +65,7 @@ elif [ -f ~/.bos/credentials ]; then
   echo "Auth: ~/.bos/credentials found."
 else
   echo "Auth: No token found."
-  echo "  Set BOS_API env var or create ~/.bos/credentials:"
-  echo '  echo "your-token-here" > ~/.bos/credentials'
+  echo "  The BOS skill will prompt you for OTP authentication upon first use."
 fi
 
 echo ""

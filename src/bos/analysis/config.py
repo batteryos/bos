@@ -1,6 +1,6 @@
 """Analysis endpoint declarations."""
 
-TITAN = "https://titan.batteryos.com/api/v1"
+TITAN = "https://batteryos.com/api/v1"
 
 ENDPOINTS = [
     {"endpoint": "/analysis/history/{iso}/{node}/tbn/",

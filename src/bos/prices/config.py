@@ -1,6 +1,6 @@
 """Prices endpoint declarations."""
 
-TITAN = "https://titan.batteryos.com/api/v1"
+TITAN = "https://batteryos.com/api/v1"
 
 ENDPOINTS = [
     {"endpoint": "/kronos/contracts/",

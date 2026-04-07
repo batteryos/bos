@@ -170,7 +170,7 @@ test_endpoint bridge GET "$MAIN" "/bridge/queue_capacity/" "Queue capacity" 200
 
 # === PUBLISH (both hosts) ===
 test_endpoint publish POST "$BEAST" "/kronos/contracts/admin/BOS/" "Monthly (beast)" not5xx
-test_endpoint publish POST "https://titan.batteryos.com/api/v1" "/kronos/contracts/admin/BOS/" "Monthly (titan)" not5xx
+test_endpoint publish POST "https://batteryos.com/api/v1" "/kronos/contracts/admin/BOS/" "Monthly (main)" not5xx
 
 # === SUMMARY ===
 TOTAL=$((PASS + FAIL + SKIP))

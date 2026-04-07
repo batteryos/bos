@@ -1,7 +1,7 @@
 """Calc endpoint declarations."""
 
 BOS = "https://batteryos.com/api/v1"
-TITAN = "https://titan.batteryos.com/api/v1"
+TITAN = "https://batteryos.com/api/v1"
 
 ENDPOINTS = [
     {"endpoint": "/data/",

@@ -4,7 +4,7 @@ from bos.base import BaseClient
 
 
 class AnalysisClient(BaseClient):
-    """Client for titan.batteryos.com analysis, chukar, and cycn endpoints."""
+    """Client for analysis, chukar, and cycn endpoints."""
 
     # -- Actuals ----------------------------------------------------------
 

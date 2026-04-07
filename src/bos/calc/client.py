@@ -122,7 +122,7 @@ class CalcClient(BaseClient):
         """GET /calc/{slug}/nodescenarios/{ns}/status/ -- NS execution status."""
         return self.get(f"/calc/{slug}/nodescenarios/{ns}/status/")
 
-    # --- Dragonet (titan) ---
+    # --- Dragonet ---
 
     def run_dragonet(self, iso, node, file, params=None, data_format="json"):
         """POST /dragonet/calc/ -- Run Dragonet calculation.

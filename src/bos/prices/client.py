@@ -5,7 +5,7 @@ from bos.prices.models import AvailableDate, Contract, ContractPrice, Exchange
 
 
 class PricesClient(BaseClient):
-    """Client for titan.batteryos.com prices and kronos endpoints."""
+    """Client for prices and kronos endpoints."""
 
     # -- Kronos contracts -------------------------------------------------
 

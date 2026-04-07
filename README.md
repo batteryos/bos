@@ -41,13 +41,14 @@ git clone https://github.com/batteryos/bos.git bos
 cd bos && ./setup
 ```
 
-### Step 2: Set your API token
+### Step 2: Authenticate (OTP)
 
-```bash
-echo "your-token-here" > ~/.bos/credentials
-```
+The first time you use any `/bos` command, the skill will interactively guide you through a Magic OTP flow:
+1. It will ask for your work email.
+2. It will send a 6-digit code to your inbox.
+3. Once you provide the code, it will automatically save your API token to `~/.bos/credentials`.
 
-Or set the `BOS_API` environment variable.
+Alternatively, you can manually set the `BOS_API` environment variable.
 
 ### What setup does
 
@@ -77,8 +78,7 @@ BOS API token, resolved in order:
 
 | Host | Services |
 |------|----------|
-| `titan.batteryos.com` | Prices, Kronos (contracts), Analysis, Dragonet |
-| `batteryos.com` | Calc, Assets, Queue, Dashboard |
+| `batteryos.com` | All Services |
 
 ## Quick Start
 

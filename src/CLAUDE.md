@@ -10,10 +10,10 @@ API JSON response shapes.
 
 ```
 BOSClient
-  ├── calc: CalcClient           → batteryos.com/api/v1 (+ dragonet on titan)
+  ├── calc: CalcClient           → batteryos.com/api/v1 (+ dragonet on batteryos.com)
   ├── assets: AssetsClient       → batteryos.com/api/v1/asset
-  ├── prices: PricesClient       → titan.batteryos.com/api/v1
-  ├── analysis: AnalysisClient   → titan.batteryos.com/api/v1
+  ├── prices: PricesClient       → batteryos.com/api/v1
+  ├── analysis: AnalysisClient   → batteryos.com/api/v1
   ├── queue: QueueClient         → batteryos.com/api/v1/queue
   └── dashboard: DashboardClient → batteryos.com/api/v1/bridge
 ```

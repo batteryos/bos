@@ -20,7 +20,7 @@ def resolve_token(token=None):
     if creds_path.exists():
         return creds_path.read_text().strip()
     raise AuthError(
-        "No BOS API token found. Set BOS_API env var or create ~/.bos/credentials"
+        "No BOS API token found. INITIATE CLI OTP FLOW: Ask the user for their work email address."
     )
 
 

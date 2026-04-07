@@ -12,13 +12,25 @@ Two hosts, one auth token:
 
 | Host | Base URL | Services |
 |------|----------|----------|
-| batteryos.com | `https://batteryos.com/api/v1` | Calc, Assets, Queue, Dashboard |
-| titan.batteryos.com | `https://titan.batteryos.com/api/v1` | Prices, Contracts, Analysis, Dragonet |
+| batteryos.com | `https://batteryos.com/api/v1` | All Services |
 
 **84 endpoints** total across 6 domains.
 
 Auth: `Authorization: Token <token>` header on every request.
-Token source: `BOS_API` env var or `~/.bos/credentials` file.
+Token source: `active_token` in `src/bos/auth.py` (explicit) > `BOS_API` env var > `~/.bos/credentials` file.
+
+## Authentication Workflow (CLI OTP)
+
+If a valid token is missing and an `AuthError` occurs:
+
+1. **Prompt for Email**: Ask the user for their work email address.
+2. **Request OTP**: Call `POST https://batteryos.com/api/v1/auth/cli/request/` with `{"email": "user@company.com"}`.
+   - If 403, inform the user about the work email requirement and ask again.
+3. **Prompt for OTP**: Tell the user to check their inbox and provide the 6-digit code.
+4. **Verify OTP**: Call `POST https://batteryos.com/api/v1/auth/cli/verify/` with `{"email": "user@company.com", "otp": "123456"}`.
+5. **Store Token**: On success (200 OK), extract the token and save it to `~/.bos/credentials`:
+   `echo -n "TOKEN_HERE" > ~/.bos/credentials`
+   Then proceed with the original request.
 
 ## Working with the API
 

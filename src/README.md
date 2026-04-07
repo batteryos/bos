@@ -59,8 +59,8 @@ Token resolved in order:
 |--------|--------|------|-----------|
 | Calc | `client.calc` | batteryos.com | 18 |
 | Assets | `client.assets` | batteryos.com | 28 |
-| Prices | `client.prices` | titan.batteryos.com | 8 |
-| Analysis | `client.analysis` | titan.batteryos.com | 11 |
+| Prices | `client.prices` | batteryos.com | 8 |
+| Analysis | `client.analysis` | batteryos.com | 11 |
 | Queue | `client.queue` | batteryos.com | 10 |
 | Dashboard | `client.dashboard` | batteryos.com | 7 |
 
