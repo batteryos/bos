@@ -21,6 +21,7 @@ Pre-computed market intelligence dashboards. All GET, no required params.
 ```bash
 mkdir -p ~/.bos/analytics
 echo '{"skill":"bos-dashboard","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.bos/analytics/skill-usage.jsonl 2>/dev/null || true
+~/.bos/bin/bos-auth-check 2>/dev/null || true
 ```
 
 ## Related skills

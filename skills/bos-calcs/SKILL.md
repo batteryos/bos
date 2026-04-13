@@ -20,6 +20,7 @@ Market analytics — TBn, RPO, basis, EOn for actuals and forwards.
 ```bash
 mkdir -p ~/.bos/analytics
 echo '{"skill":"bos-calcs","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.bos/analytics/skill-usage.jsonl 2>/dev/null || true
+~/.bos/bin/bos-auth-check 2>/dev/null || true
 ```
 
 ## Related skills

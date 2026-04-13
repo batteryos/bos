@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# bos-auth-check — check if BOS credentials are present
+# Outputs: AUTH_OK | AUTH_MISSING
+set -euo pipefail
+
+if [ -n "${BOS_API:-}" ] || [ -f "$HOME/.bos/credentials" ]; then
+  echo "AUTH_OK"
+else
+  echo "AUTH_MISSING"
+fi
+
+exit 0

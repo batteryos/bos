@@ -21,7 +21,10 @@ Token source: `active_token` in `src/bos/auth.py` (explicit) > `BOS_API` env var
 
 ## Authentication Workflow (CLI OTP)
 
-If a valid token is missing and an `AuthError` occurs:
+Run the auth flow when **any** of these occur:
+- `setup` output contains `BOS_AUTH_REQUIRED` ← install-time onboarding
+- Skill preamble outputs `AUTH_MISSING`        ← runtime credential check
+- An `AuthError` is raised                     ← token expired or invalid
 
 1. **Prompt for Email**: Ask the user for their work email address.
 2. **Request OTP**: Call `POST https://batteryos.com/api/v1/auth/cli/request/` with `{"email": "user@company.com"}`.
@@ -89,7 +92,7 @@ Skills are symlinked into `~/.claude/skills/`:
 - Config at `~/.bos/config.yaml`, managed via `~/.bos/bin/bos-config`
 
 ## Output Rules
-- Combine preamble (mkdir, logging, bos-data-check) and the actual command into a single bash call so the user sees only one output. Suppress preamble output with `>/dev/null 2>&1`. Only surface preamble results if DATA_STALE or error requiring user action.
+- Combine preamble (mkdir, logging, bos-data-check) and the actual command into a single bash call so the user sees only one output. Suppress preamble output with `>/dev/null 2>&1`. Only surface preamble results if DATA_STALE, AUTH_MISSING, or error requiring user action.
 - Show raw command output. Do not summarize, paraphrase, or editorialize unless the user asks for interpretation.
 
 ## Adding a New Skill

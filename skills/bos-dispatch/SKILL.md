@@ -20,6 +20,7 @@ Calc CRUD, data objects, node-scenario results, and Dragonet.
 ```bash
 mkdir -p ~/.bos/analytics
 echo '{"skill":"bos-dispatch","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.bos/analytics/skill-usage.jsonl 2>/dev/null || true
+~/.bos/bin/bos-auth-check 2>/dev/null || true
 ```
 
 ## Related skills

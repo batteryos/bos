@@ -20,6 +20,7 @@ ERCOT interconnection queue data.
 ```bash
 mkdir -p ~/.bos/analytics
 echo '{"skill":"bos-queue","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.bos/analytics/skill-usage.jsonl 2>/dev/null || true
+~/.bos/bin/bos-auth-check 2>/dev/null || true
 ```
 
 ## Related skills

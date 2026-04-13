@@ -24,6 +24,7 @@ if [ -d "$INSTALL_DIR/bin" ]; then
   chmod +x ~/.bos/bin/* 2>/dev/null || true
   echo "  ~/.bos/bin/bos-config"
   echo "  ~/.bos/bin/bos-data-check"
+  echo "  ~/.bos/bin/bos-auth-check"
 fi
 
 # ─── 3. Create Python venv + install library ───────────────────
@@ -59,13 +60,12 @@ done
 
 # ─── 6. Auth check ─────────────────────────────────────────────
 echo ""
-if [ -n "$BOS_API" ]; then
-  echo "Auth: BOS_API environment variable found."
-elif [ -f ~/.bos/credentials ]; then
-  echo "Auth: ~/.bos/credentials found."
+if [ -n "${BOS_API:-}" ]; then
+  echo "Auth: BOS_API environment variable found. You're all set."
+elif [ -f "$HOME/.bos/credentials" ]; then
+  echo "Auth: ~/.bos/credentials found. You're all set."
 else
-  echo "Auth: No token found."
-  echo "  The BOS skill will prompt you for OTP authentication upon first use."
+  echo "BOS_AUTH_REQUIRED"
 fi
 
 echo ""
