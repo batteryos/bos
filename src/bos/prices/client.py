@@ -1,5 +1,9 @@
 """Prices API client -- contracts, actuals, forwards."""
 
+import io
+import zipfile
+
+import pandas as pd
 from bos.base import BaseClient
 from bos.prices.models import AvailableDate, Contract, ContractPrice, Exchange
 
@@ -96,14 +100,56 @@ class PricesClient(BaseClient):
     # -- Prices data ------------------------------------------------------
 
     def get_actuals(self, iso, node, **params):
-        """POST /prices/history/{iso}/{node}/ -- Historical actuals."""
-        return self.post(f"/prices/history/{iso}/{node}/", json_data=params or None)
+        """POST /prices/history/{iso}/{node}/ -- Historical actuals.
+        Returns a list of records if JSON, or a Pandas DataFrame if a ZIP file is returned.
+        """
+        data = self.post(f"/prices/history/{iso}/{node}/", json_data=params or None)
+
+        if isinstance(data, bytes):
+            try:
+                with zipfile.ZipFile(io.BytesIO(data)) as z:
+                    # Find all CSV files and combine them
+                    csv_files = [f for f in z.namelist() if f.endswith(".csv")]
+                    if not csv_files:
+                        return data  # Return raw bytes if no CSVs found in ZIP
+
+                    dfs = []
+                    for csv_file in csv_files:
+                        with z.open(csv_file) as f:
+                            dfs.append(pd.read_csv(f))
+
+                    return pd.concat(dfs, ignore_index=True)
+            except Exception:
+                # Log error and return raw bytes if processing fails
+                return data
+
+        return data
 
     def get_forwards(self, iso, node, refdate, **params):
-        """POST /prices/futures/{iso}/{node}/{refdate}/ -- Forwards data."""
-        return self.post(
+        """POST /prices/futures/{iso}/{node}/{refdate}/ -- Forwards data.
+        Returns a list of records if JSON, or a Pandas DataFrame if a ZIP file is returned.
+        """
+        data = self.post(
             f"/prices/futures/{iso}/{node}/{refdate}/", json_data=params or None
         )
+
+        if isinstance(data, bytes):
+            try:
+                with zipfile.ZipFile(io.BytesIO(data)) as z:
+                    csv_files = [f for f in z.namelist() if f.endswith(".csv")]
+                    if not csv_files:
+                        return data
+
+                    dfs = []
+                    for csv_file in csv_files:
+                        with z.open(csv_file) as f:
+                            dfs.append(pd.read_csv(f))
+
+                    return pd.concat(dfs, ignore_index=True)
+            except Exception:
+                return data
+
+        return data
 
     def get_agg_forwards(self, exchange, iso, node, curve, agg, **params):
         """GET /prices/futures/{exchange}/{iso}/{node}/{curve}/{agg}/"""

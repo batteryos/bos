@@ -81,7 +81,9 @@ class TestMultiKeyAuth:
         _, kwargs = mock_session.get.call_args
         assert kwargs.get("headers") is None
 
-    def test_override_endpoint_sends_per_request_auth(self, mock_session, mock_response):
+    def test_override_endpoint_sends_per_request_auth(
+        self, mock_session, mock_response
+    ):
         tokens = {"KEY_A": "token-a", "KEY_B": "token-b"}
         client = BaseClient(tokens, self.ENDPOINTS)
         mock_session.get.return_value = mock_response(json_data={})

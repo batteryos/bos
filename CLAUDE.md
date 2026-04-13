@@ -80,6 +80,7 @@ Skills are symlinked into `~/.claude/skills/`:
 ~/.claude/skills/bos-queue        -> bos/skills/bos-queue/
 ```
 
+
 ## Conventions
 
 - **SKILL.md** (uppercase) for skill files

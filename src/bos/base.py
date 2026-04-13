@@ -23,8 +23,7 @@ class BaseClient:
         missing = required_keys - tokens.keys()
         if missing:
             raise AuthError(
-                f"Missing tokens for: {missing}. "
-                f"Available: {set(tokens.keys())}"
+                f"Missing tokens for: {missing}. " f"Available: {set(tokens.keys())}"
             )
 
         # Default host and auth from most common across endpoints
@@ -37,8 +36,10 @@ class BaseClient:
         # Per-endpoint overrides (entries that differ in host OR api_key)
         self.overrides = {}
         for entry in endpoints:
-            if (entry["host"] != self.default_host
-                    or entry["api_key"] != self.default_key):
+            if (
+                entry["host"] != self.default_host
+                or entry["api_key"] != self.default_key
+            ):
                 self.overrides[entry["endpoint"]] = entry
 
     def resolve(self, path):
@@ -57,8 +58,7 @@ class BaseClient:
                     auth = None
                     if entry["api_key"] != self.default_key:
                         auth = {
-                            "Authorization":
-                                f"Token {self._tokens[entry['api_key']]}"
+                            "Authorization": f"Token {self._tokens[entry['api_key']]}"
                         }
                     return host, auth
         return self.default_host, None
@@ -80,7 +80,13 @@ class BaseClient:
             raise APIError(resp.status_code, str(detail), response=resp)
         if resp.status_code == 204 or not resp.content:
             return {}
-        return resp.json()
+
+        content_type = resp.headers.get("Content-Type", "").lower()
+        if "application/json" in content_type:
+            return resp.json()
+
+        # For binary data (ZIP, PDF, XLS, etc.) or plain text
+        return resp.content
 
     @staticmethod
     def serialize(body, kwargs):
@@ -107,9 +113,7 @@ class BaseClient:
 
     def get(self, path, params=None):
         url, auth = self.prepare(path)
-        resp = self.session.get(
-            url, params=params, timeout=self.timeout, headers=auth
-        )
+        resp = self.session.get(url, params=params, timeout=self.timeout, headers=auth)
         return self.handle_response(resp)
 
     def post(self, path, json_data=None):
